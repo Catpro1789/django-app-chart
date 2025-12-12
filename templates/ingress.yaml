@@ -1,1 +1,31 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "django-app.fullname" . }}-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+{{- include "django-app.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  rules:
+  {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+        {{- range .paths }}
+          - path: {{ .path | quote }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "django-app.fullname" $ }}
+                port:
+                  number: {{ $.Values.app.port }}
+        {{- end }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+  {{- toYaml .Values.ingress.tls | nindent 2 }}
+  {{- end }}
+{{- end }}
 
