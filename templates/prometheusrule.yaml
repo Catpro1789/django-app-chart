@@ -1,4 +1,4 @@
-{{- if .Values.prometheusRule.enabled }}
+{{- if .Values.monitoring.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -6,14 +6,11 @@ metadata:
   namespace: {{ .Values.global.namespace }}
 spec:
   groups:
-    - name: django-app
+    - name: django.rules
       rules:
-        - alert: DjangoAppDown
-          expr: up{job="{{ include "django-app.fullname" . }}"} == 0
+        - alert: DjangoDown
+          expr: up == 0
           for: 1m
           labels:
             severity: critical
-          annotations:
-            summary: "Django application is down"
-            description: "Instance {{ $labels.instance }} is not responding"
 {{- end }}
