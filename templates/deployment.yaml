@@ -3,60 +3,31 @@ kind: Deployment
 metadata:
   name: {{ include "django-app.fullname" . }}
   namespace: {{ .Values.global.namespace }}
-  labels:
-{{- include "django-app.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.app.replicas }}
   selector:
     matchLabels:
-{{- include "django-app.selectorLabels" . | nindent 6 }}
+      app: {{ include "django-app.name" . }}
   template:
     metadata:
       labels:
-{{- include "django-app.selectorLabels" . | nindent 8 }}
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "{{ .Values.app.port }}"
-        prometheus.io/path: "/metrics"
-        rollme: {{ randAlphaNum 5 | quote }}
+        app: {{ include "django-app.name" . }}
     spec:
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-{{ toYaml .Values.image.pullSecrets | nindent 6 }}
-      {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - name: django
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
             - containerPort: {{ .Values.app.port }}
-              name: http
           env:
+            - name: DEBUG
+              value: {{ .Values.app.env.DEBUG | quote }}
+            - name: ALLOWED_HOSTS
+              value: {{ .Values.app.env.ALLOWED_HOSTS | quote }}
             - name: DB_NAME
               value: {{ .Values.postgresql.auth.database | quote }}
             - name: DB_USER
               value: {{ .Values.postgresql.auth.username | quote }}
             - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-postgresql
-                  key: postgresql-password
-            - name: DEBUG
-              value: {{ .Values.app.env.DEBUG | quote }}
-            - name: ALLOWED_HOSTS
-              value: {{ .Values.app.env.ALLOWED_HOSTS | quote }}
-          livenessProbe:
-            httpGet:
-              path: /health/
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /health/
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 5
+              value: {{ .Values.postgresql.auth.password | quote }}
           resources:
-{{- toYaml .Values.app.resources | nindent 12 }}
-
+{{ toYaml .Values.resources | indent 12 }}
