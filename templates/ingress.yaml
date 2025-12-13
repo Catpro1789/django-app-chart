@@ -2,30 +2,23 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "django-app.fullname" . }}-ingress
+  name: {{ include "django-app.fullname" . }}
   namespace: {{ .Values.global.namespace }}
-  labels:
-{{- include "django-app.labels" . | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.ingress.className | quote }}
+  ingressClassName: {{ .Values.ingress.className }}
   rules:
-  {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+{{- range .Values.ingress.hosts }}
+    - host: {{ .host }}
       http:
         paths:
-        {{- range .paths }}
-          - path: {{ .path | quote }}
+{{- range .paths }}
+          - path: {{ .path }}
             pathType: {{ .pathType }}
             backend:
               service:
                 name: {{ include "django-app.fullname" $ }}
                 port:
-                  number: {{ $.Values.app.port }}
-        {{- end }}
-  {{- end }}
-  {{- if .Values.ingress.tls }}
-  tls:
-  {{- toYaml .Values.ingress.tls | nindent 2 }}
-  {{- end }}
+                  number: 80
 {{- end }}
-
+{{- end }}
+{{- end }}
