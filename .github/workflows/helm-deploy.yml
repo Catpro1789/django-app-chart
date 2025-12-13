@@ -1,1 +1,30 @@
+name: Helm CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  RELEASE_NAME: django-app-production
+  NAMESPACE: django-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+
+      - name: Helm deploy
+        run: |
+          helm dependency update
+          helm upgrade --install $RELEASE_NAME . \
+            --namespace $NAMESPACE \
+            --create-namespace
 
