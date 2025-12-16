@@ -3,7 +3,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "django-app.fullname" . }}
-  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "django-app.labels" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
@@ -16,7 +17,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ include "django-app.fullname" $ }}
+                name: {{ include "django-app.fullname" $. }}
                 port:
                   number: {{ $.Values.app.port }}
           {{- end }}
