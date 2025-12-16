@@ -3,11 +3,13 @@ kind: Service
 metadata:
   name: {{ include "django-app.fullname" . }}
   namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "django-app.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.app.serviceType }}
   selector:
-    app: {{ include "django-app.name" . }}
+    {{- include "django-app.selectorLabels" . | nindent 4 }}
   ports:
-    - port: 80
+    - name: http
+      port: {{ .Values.app.port }}
       targetPort: {{ .Values.app.port }}
-      name: http
