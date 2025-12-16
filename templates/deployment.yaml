@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "django-app.fullname" . }}
-  namespace: {{ .Values.global.namespace }}
   labels:
     {{- include "django-app.labels" . | nindent 4 }}
 spec:
@@ -14,31 +13,30 @@ spec:
     metadata:
       labels:
         {{- include "django-app.selectorLabels" . | nindent 8 }}
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "{{ .Values.app.port }}"
-        prometheus.io/path: "/metrics"
     spec:
       containers:
-        - name: django
+        - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.app.port }}
           env:
-            - name: DB_NAME
-              value: {{ .Values.postgresql.auth.database | quote }}
-            - name: DB_USER
-              value: {{ .Values.postgresql.auth.username | quote }}
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-postgresql
-                  key: password
             - name: DEBUG
               value: {{ .Values.app.env.DEBUG | quote }}
             - name: ALLOWED_HOSTS
               value: {{ .Values.app.env.ALLOWED_HOSTS | quote }}
+            - name: DB_HOST
+              value: {{ .Values.app.env.DB_HOST | quote }}
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgresql
+                  key: postgresql-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgresql
+                  key: postgresql-password
           livenessProbe:
             httpGet:
               path: /health/
@@ -51,5 +49,3 @@ spec:
               port: {{ .Values.app.port }}
             initialDelaySeconds: 5
             periodSeconds: 5
-          resources:
-            {{- toYaml .Values.app.resources | nindent 12 }}
