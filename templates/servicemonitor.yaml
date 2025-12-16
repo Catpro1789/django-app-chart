@@ -7,8 +7,10 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: {{ include "django-app.name" . }}
+      app.kubernetes.io/name: {{ include "django-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   endpoints:
     - port: http
       path: /metrics
+      interval: 30s
 {{- end }}
