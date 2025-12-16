@@ -8,9 +8,12 @@ spec:
   groups:
     - name: django.rules
       rules:
-        - alert: DjangoDown
-          expr: up == 0
+        - alert: DjangoAppDown
+          expr: up{job="{{ include "django-app.fullname" . }}"} == 0
           for: 1m
           labels:
             severity: critical
+          annotations:
+            summary: "Django application is down"
+            description: "Django pod is not responding"
 {{- end }}
