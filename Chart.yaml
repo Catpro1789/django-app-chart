@@ -1,6 +1,6 @@
 apiVersion: v2
 name: django-app
-description: Django application deployed via Helm
+description: Django application with PostgreSQL (microk8s compatible)
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
