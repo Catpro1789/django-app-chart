@@ -1,17 +1,13 @@
-Thank you for installing {{ .Chart.Name }}.
+Django application deployed successfully 🎉
 
-To get the application URL:
+Ingress:
+  http://django-app.local
 
-  NOTE: If using minikube, run:
-    minikube ip
-    and use the ingress host (add to /etc/hosts: 192.168.49.2 django-app.local)
+Check pods:
+  kubectl get pods -n django-app
 
-To check pods:
-  kubectl get pods -n {{ .Values.global.namespace }}
+Check metrics:
+  http://django-app.local/metrics
 
-To access Grafana (if kube-prometheus-stack installed):
-  kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
-
-To view logs with kubectl:
-  kubectl logs -l app.kubernetes.io/name={{ include "django-app.name" . }} -n {{ .Values.global.namespace }}
-
+Rollback:
+  helm rollback <release> <revision>
