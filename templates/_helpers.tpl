@@ -1,16 +1,21 @@
 {{- define "django-app.name" -}}
-{{ .Chart.Name }}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{- define "django-app.fullname" -}}
-{{ printf "%s-%s" .Release.Name .Chart.Name }}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name (include "django-app.name" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
 {{- end }}
 
 {{- define "django-app.labels" -}}
+helm.sh/chart: {{ include "django-app.chart" . }}
 app.kubernetes.io/name: {{ include "django-app.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/version: {{ .Chart.AppVersion }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 {{- end }}
 
 {{- define "django-app.selectorLabels" -}}
