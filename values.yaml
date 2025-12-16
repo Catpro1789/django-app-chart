@@ -2,40 +2,44 @@ global:
   namespace: django-app
 
 image:
-  repository: localhost:30500/django-app
-  tag: latest
+  repository: "NODE_IP:30500/django-app"
+  tag: "latest"
   pullPolicy: IfNotPresent
 
 app:
-  replicas: 2
+  replicas: 3
   port: 8000
+  serviceType: ClusterIP
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
   env:
     DEBUG: "False"
     ALLOWED_HOSTS: "*"
 
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 500m
-    memory: 512Mi
-
 ingress:
   enabled: true
-  className: nginx
+  className: public
   hosts:
     - host: django-app.local
       paths:
         - path: /
           pathType: Prefix
+  tls: []
 
 postgresql:
   enabled: true
   auth:
-    username: django
-    password: django123
-    database: django
+    database: django_app
+    username: django_user
+    password: postgres_password_123
+
   persistence:
     enabled: true
     size: 5Gi
