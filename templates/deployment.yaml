@@ -3,31 +3,53 @@ kind: Deployment
 metadata:
   name: {{ include "django-app.fullname" . }}
   namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "django-app.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.app.replicas }}
   selector:
     matchLabels:
-      app: {{ include "django-app.name" . }}
+      {{- include "django-app.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ include "django-app.name" . }}
+        {{- include "django-app.selectorLabels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.app.port }}"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: django
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.app.port }}
           env:
-            - name: DEBUG
-              value: {{ .Values.app.env.DEBUG | quote }}
-            - name: ALLOWED_HOSTS
-              value: {{ .Values.app.env.ALLOWED_HOSTS | quote }}
             - name: DB_NAME
               value: {{ .Values.postgresql.auth.database | quote }}
             - name: DB_USER
               value: {{ .Values.postgresql.auth.username | quote }}
             - name: DB_PASSWORD
-              value: {{ .Values.postgresql.auth.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgresql
+                  key: password
+            - name: DEBUG
+              value: {{ .Values.app.env.DEBUG | quote }}
+            - name: ALLOWED_HOSTS
+              value: {{ .Values.app.env.ALLOWED_HOSTS | quote }}
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: {{ .Values.app.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: {{ .Values.app.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
-{{ toYaml .Values.resources | indent 12 }}
+            {{- toYaml .Values.app.resources | nindent 12 }}
