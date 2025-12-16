@@ -1,48 +1,41 @@
-global:
-  namespace: django-app
-
+# Image settings
 image:
-  repository: "NODE_IP:30500/django-app"
-  tag: "latest"
+  repository: localhost:32000/django-app   # приватный registry microk8s
+  tag: latest
   pullPolicy: IfNotPresent
 
+# Application settings
 app:
   replicas: 3
   port: 8000
-  serviceType: ClusterIP
-
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-
   env:
     DEBUG: "False"
     ALLOWED_HOSTS: "*"
+    DB_HOST: "{{ .Release.Name }}-postgresql"
 
+# Ingress
 ingress:
   enabled: true
-  className: public
+  className: "nginx"
   hosts:
     - host: django-app.local
       paths:
         - path: /
           pathType: Prefix
-  tls: []
 
+# PostgreSQL
 postgresql:
   enabled: true
   auth:
-    database: django_app
-    username: django_user
-    password: postgres_password_123
-
+    database: "django_app"
+    username: "django_user"
+    password: "postgres_password_123"
   persistence:
     enabled: true
     size: 5Gi
 
+# Monitoring
 monitoring:
   enabled: true
+  serviceMonitor:
+    enabled: true
